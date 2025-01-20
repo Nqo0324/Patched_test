@@ -1,24 +1,27 @@
 import sqlite3
+from flask import Flask, request
 
-def login(username, password):
-    # 连接到数据库
-    conn = sqlite3.connect("users.db")
-    cursor = conn.cursor()
+app = Flask(__name__)
 
-    # 不安全的 SQL 查询，容易受到 SQL 注入攻击
-    query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
-    cursor.execute(query)
+# SQLiteデータベースの接続
+def connect_db():
+    return sqlite3.connect('example.db')
+
+@app.route('/search')
+def search():
+    # ユーザーからの入力を取得
+    username = request.args.get('username')
+
+    # ユーザー入力をSQLクエリに直接埋め込んでしまう（脆弱）
+    query = f"SELECT * FROM users WHERE username = '{username}'"
     
-    user = cursor.fetchone()
-    conn.close()
+    # データベース接続とクエリ実行
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute(query)
+    results = cursor.fetchall()
+    
+    return str(results)
 
-    if user:
-        print("Login successful!")
-    else:
-        print("Invalid username or password.")
-
-# 演示调用
-user_input_username = input("Enter username: ")
-user_input_password = input("Enter password: ")
-
-login(user_input_username, user_input_password)
+if __name__ == '__main__':
+    app.run(debug=True)
